@@ -2,15 +2,6 @@
   <div>
     <Header></Header>
     <div class="navbar">
-      <div class="info">
-        <span style="font-weight: bold"> 用户信息</span>
-        <div style="line-height: 23px">uid</div>
-        <div class="logout">
-          完成操作后请点击&nbsp;
-          <a href="#/login" style="color: blue" @click="logout">[安全退出]</a>
-        </div>
-      </div>
-
       <el-col :span="100">
         <el-menu default-active="2" background-color="#2c3e50" text-color="#fff" active-text-color="#ffd04b">
           <el-submenu index="1">
@@ -20,10 +11,10 @@
             </template>
             <el-menu-item-group>
               <router-link :to="tag1">
-                <el-menu-item index="1-1">查看子组件1</el-menu-item>
+                <el-menu-item index="1-1">查看个人帖子</el-menu-item>
               </router-link>
               <router-link :to="tag2">
-                <el-menu-item index="1-2">查看子组件2</el-menu-item>
+                <el-menu-item index="1-2">个人信息</el-menu-item>
               </router-link>
             </el-menu-item-group>
           </el-submenu>

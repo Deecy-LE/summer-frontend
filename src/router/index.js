@@ -26,6 +26,18 @@ export default new VueRouter({
         {
             path: "/home",  //需求：若访问home页面时不带参数，分两个情况：1)已登录(jwt有记录)，则自动跳转到登录用户的id页面 2）未登录，自动跳转到login界面
             component: () => import('@/pages/Home'),
+            // 挂载路由导航守卫
+            beforeEnter: (to, from, next) => {
+                const isLogin = localStorage.getItem('TOKEN')
+                if (!isLogin) {
+                    alert('请先登录')
+                    return next('/login')
+                }
+                else {
+                    next()
+                }
+                next()
+            },
             children: [
                 {
                     path: 'blog_list',
@@ -35,12 +47,12 @@ export default new VueRouter({
                     path: 'publish',
                     component: () => import('@/pages/Publish'),
                 },
+                {
+                    path: 'blog_detail/:blog_id',
+                    name: 'Detail',
+                    component: () => import('@/pages/Blog_Detail'),
+                },
             ]
-        }
-        ,
-        {
-            path: "/home/:uid(\\d+)?",  //暂时限定id为数字  //动态路由，通过正则限制路由后面参数
-            component: () => import('@/pages/Home'),
         }
         ,
         {
@@ -51,6 +63,18 @@ export default new VueRouter({
         {
             path: "/space",   //嵌套路由示例
             component: () => import('@/pages/Space'),
+            // 挂载路由导航守卫
+            beforeEnter: (to, from, next) => {
+                const isLogin = localStorage.getItem('TOKEN')
+                if (!isLogin) {
+                    alert('请先登录')
+                    return next('/login')
+                }
+                else {
+                    next()
+                }
+                next()
+            },
             children: [
                 {
                     // path: '/space/subModule1',
@@ -63,13 +87,7 @@ export default new VueRouter({
                     component: () => import('@/pages/Space/subModule2'),
                 },
             ],
-        }
-        ,
-        {
-            path: "/blog/post",
-            component: () => import('@/pages/Publish'),
-        }
-        ,
+        },
         {
             path: "/:path(.*)",   //404，当无法匹配其他路由时选择该页面
             component: () => import('@/pages/404.vue'),

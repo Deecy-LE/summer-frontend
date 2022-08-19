@@ -7,15 +7,17 @@ import 'element-ui/lib/theme-chalk/index.css';
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
 import axios from 'axios';
-
+import api from './api'
+import { Message } from 'element-ui';
 //注册全局组件
 import Header from '@/components/Header'
-import loading from '@/components/Loading'
-Vue.component(Header.name,Header);
+Vue.component("Header",Header);
 Vue.use(ElementUI);
-Vue.use(loading)
 Vue.use(mavonEditor)
 Vue.prototype.$axios = axios
+Vue.prototype.$api = api
+Vue.prototype.$message = Message
+
 
 new Vue({
   //注册路由

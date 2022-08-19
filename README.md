@@ -1,5 +1,4 @@
-# Summer-Frontend
-- 夏季学期web项目的前端
+# Vue-Go-Exercise中的前端项目
 
 
 ## 运行方式

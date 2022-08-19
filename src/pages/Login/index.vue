@@ -1,5 +1,4 @@
 <template>
-    
   <div class="module">
     <div class="container">
       <div class="form-box">
@@ -8,7 +7,16 @@
           <div class="register-box hidden">
             <h1>REGISTER</h1>
             <input type="text" placeholder="用户名" v-model="reg_id" />
-            <input type="password" placeholder="密码" v-model="reg_pwd" @keydown.13="post_register" />
+            <input
+              type="password"
+              placeholder="密码"
+              v-model="reg_pwd"
+              @keydown.13="post_register"
+            />
+            <input type="text" placeholder="邮箱" v-model="email" />
+            <div class="button">
+              <button @click="email_code">获取验证码</button>
+            </div>
             <input type="text" placeholder="验证码" v-model="va_code" />
             <button @click.prevent="post_register">注册</button>
           </div>
@@ -17,9 +25,22 @@
         <keep-alive>
           <div class="login-box">
             <h1>LOGIN</h1>
-            <input type="text" placeholder="用户名" v-model="log_id" />
-            <input type="password" placeholder="密码" v-model="log_pwd" @keydown.13="post_login" />
-            <span class="error-info" v-show="has_error">{{this.error_msg}}</span>
+            <input
+              type="text"
+              placeholder="邮箱"
+              v-model="log_email"
+              required
+            />
+            <input
+              type="password"
+              placeholder="密码"
+              v-model="log_pwd"
+              @keydown.13="post_login"
+              required
+            />
+            <span class="error-info" v-show="has_error">{{
+              this.error_msg
+            }}</span>
             <button @click.prevent="post_login">登录</button>
           </div>
         </keep-alive>
@@ -40,44 +61,29 @@
       </div>
     </div>
   </div>
-
 </template>
 
 
 <script>
-import  cryptoJSObj  from  '@/utils/crypto.js'
-import {
-    get_space,
-} from "@/api";
+import cryptoJSObj from "@/utils/crypto.js";
+import { get_space, get_email_code, put_regester } from "@/api";
+import { Message } from "element-ui";
 export default {
   data() {
     return {
-      hide : true,
-      log_id: "",
+      hide: true,
+      log_email: "",
       log_pwd: "",
       reg_id: "",
       reg_pwd: "",
+      email: "",
       va_code: "",
-      has_error:false,
-      error_msg:"",
+      has_error: false,
+      error_msg: "",
     };
   },
   methods: {
-    //访问space按钮的函数
-    async visit_space(){
-       let result = await get_space()
-       if (result.code == 1) {  //已登录成功
-          let toPath = "/space/"+result.uid;
-          this.$router.push(toPath);
-          console.log(result.msg);
-        }
-        else{ //未登录
-          let toPath = "/login"
-          this.$router.push(toPath);
-          alert(result.msg)
-        }
-    },
-    //换成登录页面切换
+    //页面切换
     toLogin() {
       var login_box = document.getElementsByClassName("login-box")[0];
       var form_box = document.getElementsByClassName("form-box")[0];
@@ -96,39 +102,83 @@ export default {
     },
     //登录的回调函数
     async post_login() {
-        const { log_id, log_pwd } = this;
-        log_id && log_pwd;
-        let crypto_pwd=cryptoJSObj.encryptFunc(log_pwd) //加密
-        let result = await this.$store.dispatch("post_login", {
-          usr: log_id,
-          pwd: crypto_pwd,
-        });
-        if (result.code == 1) {  //登录成功
-          let toPath = "/home/"+result.uid;
-          this.$router.push(toPath);
-          console.log(result.msg);
-        }
-        else { //登录失败，打印失败信息到屏幕
-          this.has_error=true
-          this.error_msg=result.msg
-        }
+      const { log_email, log_pwd } = this;
+      log_email && log_pwd;
+      if (log_email == "" || log_pwd == "") {
+        this.$message.error("邮箱或密码不能为空！");
+        return;
+      }
+      let crypto_pwd = cryptoJSObj.encryptFunc(log_pwd); //加密
+      let result = await this.$store.dispatch("post_login", {
+        //通过store.js中的业务逻辑处理登录，其中包括存储token，userInfo
+        email: log_email,
+        password: crypto_pwd,
+      });
+      if (result.data !== null) {
+        //登录成功
+        //跳转页面
+        this.$router.push("/home/blog_list");
+      } else {
+        //登录失败，弹窗提醒
+        Message.error("登录失败，请检查账号密码是否正确!");
+      }
     },
+    //注册的回调函数
     async post_register() {
-
+      const { reg_id, reg_pwd, email, va_code } = this;
+      reg_id && reg_pwd && email && va_code;
+      if (reg_id == "") {
+        this.$message.error("用户名不能为空！");
+        return;
+      } else if (reg_pwd == "") {
+        this.$message.error("密码不能为空！");
+        return;
+      } else if (email == "") {
+        this.$message.error("邮箱不能为空！");
+        return;
+      } else if (va_code == "") {
+        this.$message.error("验证码不能为空！");
+        return;
+      }
+      let crypto_pwd = cryptoJSObj.encryptFunc(reg_pwd); //加密
+      let res = await put_regester({
+        username: reg_id,
+        password: crypto_pwd,
+        email: email,
+        verification: va_code,
+      });
+      console.log(res);
+      if (res.data.ok) {
+        //切换回登录界面
+        this.toLogin();
+        //提示注册成功
+        this.$message.success("注册成功!");
+      } else {
+        let msg = res.data.msg;
+        this.$message.error("注册失败!" + msg);
+      }
+    },
+    //邮箱验证码
+    async email_code() {
+      if (this.email == "") {
+        this.$message.error("邮箱不能为空！");
+        return;
+      }
+      let res = await get_email_code({
+        email: this.email,
+      });
+      if (res.data.ok) {
+        this.$message("邮箱验证码已发送，请注意查收。");
+      } else {
+        this.$message.error("获取邮箱验证码失败，请检查邮箱是否正确");
+      }
     },
   },
+  //自动登录
   async mounted() {
-    //自动登录
-       let result = await get_space()
-       if (result.code == 1) {  //已登录成功
-          let toPath = "/space";
-          this.$router.push(toPath);
-          console.log(result.msg);
-        }
-        else{ //未登录
-          let toPath = "/login"
-          this.$router.push(toPath);
-        }
+    if (localStorage.getItem("TOKEN")) {
+      this.$router.push("/home/blog_list");
+    }
   },
 };
 </script>
@@ -176,7 +226,7 @@ export default {
   background-color: rgb(212, 27, 27) f;
   box-shadow: 5px 5px 5px rgba(191, 16, 16, 0.1);
 }
-.error-info{
+.error-info {
   color: red;
 }
 .form-box {
@@ -186,7 +236,7 @@ export default {
   left: 5%;
   background-color: #b7bcd8;
   width: 320px;
-  height: 500px;
+  height: 530px;
   border-radius: 5px;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -204,6 +254,10 @@ export default {
   flex-direction: column;
   align-items: center;
   width: 100%;
+}
+
+.register-box button {
+  height: 100%;
 }
 
 .hidden {
@@ -252,7 +306,7 @@ input:focus::placeholder {
 
 .form-box button {
   width: 70%;
-  margin-top: 35px;
+  margin-top: 9px;
   background-color: #f6f6f6;
   outline: none;
   border-radius: 8px;
@@ -332,5 +386,12 @@ input:focus::placeholder {
 .con-box button:hover {
   background-color: #d3b7d8;
   color: #fff;
+}
+
+.button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-content: center;
 }
 </style>

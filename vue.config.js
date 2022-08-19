@@ -1,17 +1,17 @@
 const proxyObj = {}
 proxyObj['/'] = {
-    target: 'http://localhost:9090',
+    target: 'http://124.222.25.150:9090',
     changeOrigin: true,
     pathRewrite: {
         '^/': ''
     }
 }
 module.exports = {
-    publicPath:"./",
+    publicPath: "./",
     lintOnSave: false,
     devServer: {
         host: 'localhost',
-        port: 8081,
+        port: 8080,
         proxy: proxyObj
     },
     configureWebpack: config => {
@@ -20,8 +20,8 @@ module.exports = {
             config.mode = 'production';
             // 打包文件大小配置
             config.performance = {
-              maxEntrypointSize: 10000000,
-              maxAssetSize: 30000000
+                maxEntrypointSize: 10000000,
+                maxAssetSize: 30000000
             }
         }
     }
